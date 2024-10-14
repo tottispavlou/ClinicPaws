@@ -1,0 +1,705 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Patient Information Form</title>
+    <!-- Include Bootstrap CSS and JavaScript -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Jaldi&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  </head>
+  <body>
+    <nav class="nav-bar fixed-bottom bg-light">
+    <div class="container">
+      <ul class="nav justify-content-center nav-bar">
+        <li class="nav-item">
+          <a class="nav-link" href="manage_patients.html">
+            <i class="fas fa-paw fa-2x" aria-hidden="true"></i> <!-- Font Awesome users icon -->
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="add_patient.html">
+            <i class="fas fa-plus-square fa-2x"></i> <!-- Font Awesome user-plus icon -->
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="run_ml.html">
+            <i class="fas fa-heartbeat fa-2x" aria-hidden="true"></i> <!-- Font Awesome cogs icon -->
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav> 
+  <!-- Patient dropdown -->
+  <div class="container mt-4">
+    <label class="container-header" for="patientDropdown">Search Patient</label>
+    <!-- Input for searching patients -->
+    <input type="text" id="searchInput" class="form-control" placeholder="Search for a patient">
+    <select id="patientDropdown" class="form-select">
+      <option value="" disabled selected>Select a patient</option>
+    </select>
+  </div>
+
+  <!-- Display area for general information -->
+<div class="container-general-info">
+  <div id="generalInfoDisplay" style="display: none;">
+    <h3 class="container-header">General Information</h3>
+      <div class="table-responsive">
+          <table class="table table-custom">
+            <thead></thead>
+              <tbody></tbody>
+          </table>
+      </div>
+  </div>
+</div>
+
+
+  <!-- New Incident (initially hidden) -->
+  <div class="container mt-4">
+    <button id="newIncidentButton" class="btn btn-outlined" style="display: none;">New Event</button>
+  </div>
+  <!-- Form for entering incident information (initially hidden) -->
+<div class="container mt-4" style="display: none;" id="incidentFormContainer">
+    <form id="incidentForm">
+      <h3 class="container-header">New Event</h3>
+      <div class="mb-3">
+        <label for="incidentName" class="form-label">Event Name:</label>
+        <input type="text" id="incidentName" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="incidentDate" class="form-label">Event Date:</label>
+        <input type="date" id="incidentDate" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="incidentDescription" class="form-label">Event Description (Optional):</label>
+        <textarea id="incidentDescription" class="form-control" required></textarea>
+      </div>
+      <button type="submit" class="btn-outlined">Submit</button>
+    </form>
+  </div>
+ <!-- Container for incident frames (initially hidden) -->
+ <div class="container container-incident" style="display: none;" id="incidentListContainer">
+  <h3 class="container-header">Events</h3>
+  <div id="incidentCards" class="row">
+      <!-- Incident cards will be dynamically inserted here by the JavaScript -->
+  </div>
+  <div class="container container mb-3" style="display: none;" id="emptyContainer">
+    <h3 class="container-header">   </h3>
+    </div>
+  </div>
+
+  <!-- Container for visualizations (initially hidden) -->  
+ <div class="container container-incident" style="display: none;" id="visualizationContainer">
+  <h3 class="container-header">Electrolytes Measurments</h3>
+  <div class="frame-toggle">
+    <button class="toggle-button" data-time="9months" id="timeToggle" onclick="toggleGr('9months')">9 Months</button>
+    <button class="toggle-button" data-time="2years" id="timeToggle" onclick="toggleGr('2years')">2 Years</button>
+    <button class="toggle-button" data-time="alltime" id="timeToggle" onclick="toggleGr('alltime')">All Time</button>
+  </div>
+  <div class="frame-body frame-body-images">
+    <img class="graph-image" id='graph1' src="data-viz/9 mo big.png" alt="Graph 1">
+    <img class="graph-image" id='graph2'src="data-viz/2 years big.png" alt="Graph 2">
+    <img class="graph-image" id='graph3'src="data-viz/2 years big.png" alt="Graph 3">
+  </div>
+</div>
+</div>
+
+  
+</body> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+<style>
+  body {
+            font-family: 'Jaldi', sans-serif; /* Apply Jaldi font to everything */
+            padding-bottom: 80px; /* Adjust the value as needed */
+        }
+  /* Custom CSS for navigation */
+  .nav-bar {
+    display: flex;
+    justify-content: space-between; /* Spread items */
+  }
+
+  .nav-link {
+    text-decoration: none;
+    color: #D15EEE; /* Text color */
+  }
+  .nav-link:hover{
+    color: #9436ac; /* Text color */
+  }
+
+  .nav-item {
+    text-align: center;
+    padding-left: 80px;
+    padding-right: 80px;
+  }
+  .card-header-custom {
+      font-size: 1.2rem;
+      padding-left: 20px;
+      padding-top: 10px;
+      border: none; 
+      background-color: #4b2053;
+      font-stretch: expanded;
+      color: white;
+
+  }
+  .card-incident{
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    background-color: #fbeffd;
+    border: 0.5px solid #c6c6c6; /* Border color */
+    border-radius: 10;
+    height:300px
+    
+  }
+.frame-body-custom {
+  /*padding-left: 15px;
+  padding-top: 5px;*/
+  padding-bottom: 5px;
+}
+.frame-body-images {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding-bottom: 5px;
+  padding-top: 5px;
+}
+.frame-toggle{
+  display: flex;
+width: 343px;
+height: 32px;
+align-items: flex-start;
+flex-shrink: 0;
+border-radius: 8px;
+background: var(--fill-color-light-tertiary, rgba(118, 118, 128, 0.12));
+}
+.toggle-button {
+      display: inline-block;
+      background: var(--fill-color-light-tertiary, rgba(118, 118, 128, 0.12));
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      height: 32px;
+      width: 114px;
+      box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.10);
+    }
+
+  .toggle-button.active {
+    background-color: #fff !important;
+    color: #000;
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.10);
+  }
+.graph-image{
+  height: 700px;
+}
+.frame-header-custom {
+  padding-left: 20px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  font-weight: 550;
+}
+.frame-body-custom2 {
+  padding-left: 20px;
+  padding-top: 20px;
+  font-size: 0.8rem;
+  line-height: 0.1;
+ /* padding-top: 5px;
+  padding-bottom: 5px;*/
+}
+.frame-body-treatment {
+  padding-left: 20px;
+  font-size: 0.9rem;
+  line-height: 0.1;
+  padding-top: 5px;
+}
+.container-incident{
+  background-color: #fbeffd;
+  margin-top: 1.5rem;
+  margin-left: 7rem;
+  margin-right: 7rem;
+  margin-bottom: 1.5rem;
+  padding-top: 0px;
+  padding-left: 20px;
+  padding-right: 20px;
+  border-radius: 20px;
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.10);
+
+
+}
+.container-header {
+    color: #676666; /* Text color */
+    font-size: 1.5rem; /* Font size */
+    font-weight: 500; /* Font weight */
+    padding-bottom: 7px;
+    padding-top: 20px;
+}
+/* Primary Outlined Button */
+.btn-outlined {
+    color: #D15EEE; /* Text color */
+    font-size: 1.1rem;
+    background-color: transparent; /* Background color */
+    border: 1px solid #D15EEE; /* Border color */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-left: 20px;
+}
+
+/* Hover state */
+.btn-outlined:hover {
+    color: #7d1db9; /* Text color on hover */
+    background-color: transparent; /* Background color on hover */
+    border: 1px solid #7d1db9; /* Border color on hover */
+}
+.container-general-info{
+  background-color: #fbeffd;
+  margin-top: 1.5rem;
+  margin-left: 7rem;
+  margin-right: 7rem;
+  padding-top: 0px;
+  padding-left: 20px;
+  padding-right: 20px;
+  border-radius: 20px;
+  width: 500px;
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.10);
+}
+
+/* Customize the table styles */
+.table-custom {
+  border-collapse: collapse; 
+  width: 100%;
+  }
+
+/* To style alternate rows with a different background color (optional) */
+.table-custom td{
+  background-color: #fbeffd;
+  font-weight: bold;
+  border: none; /* Removes the border from table cells and headers */
+  padding: 8px; /* Adds some padding inside the cells for better readability */
+  background-color: #fbeffd; 
+}
+.table-custom th{
+  background-color: #fbeffd;
+  font-weight: normal;
+  border: none; /* Removes the border from table cells and headers */
+  padding: 8px; /* Adds some padding inside the cells for better readability */
+  background-color: #fbeffd; 
+}
+
+
+
+.btn-upload {
+    color: #D15EEE; /* Text color */
+    background-color: transparent; /* Background color */
+    border: 1px solid #D15EEE; /* Border color */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-left: 20px
+
+}
+
+/* Hover state */
+.btn-upload:hover {
+    color: #7d1db9; /* Text color on hover */
+    background-color: transparent; /* Background color on hover */
+    border: 1px solid #7d1db9; /* Border color on hover */
+}
+
+#visualizationContainer {
+  display: flex;
+  padding-bottom: 20px;
+}
+
+#centeredImage {
+  max-width: 80%;
+  max-height: 80%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 300px; 
+}
+
+
+
+</style>
+
+<script>
+    const { ipcRenderer } = require('electron');
+    const fs = require('fs');
+    const path = require('path');
+    const excel = require('exceljs');
+    const Chart = require('chart.js');
+  
+    const searchInput = document.getElementById('searchInput');
+    const patientDropdown = document.getElementById('patientDropdown');
+    const patientInfoDisplay = document.getElementById('patientInfoDisplay');
+  
+    
+    // Function to search for patients based on user input
+    function searchPatients() {
+    const searchTerm = searchInput.value.trim();
+    if (!searchTerm) {
+        patientDropdown.innerHTML = '<option value="" disabled selected>Select a patient</option>';
+        return;
+    }
+
+    // Clear previous search results
+    patientDropdown.innerHTML = '';
+
+    // Read the patient_data directory to find matching folders
+    const patientDataPath = path.join(__dirname, 'patient_data');
+    fs.readdir(patientDataPath, (err, files) => {
+        if (err) {
+        console.error(err);
+        return;
+        }
+
+        // Filter folders that match the search term (phone or pet name)
+        const matchingPatients = files.filter((folderName) => {
+        // Check if the search term partially or fully matches the folder name
+        if (folderName.toLowerCase().includes(searchTerm.toLowerCase())) {
+            return true;
+        }
+        });
+
+        // Populate the patient dropdown with matching patients
+        if (matchingPatients.length === 0) {
+        patientDropdown.innerHTML = '<option value="" disabled selected>No matching patients</option>';
+        } else {
+        matchingPatients.forEach((patientFolder) => {
+            const option = document.createElement('option');
+            option.value = patientFolder;
+            option.text = patientFolder;
+            patientDropdown.appendChild(option);
+        });
+        }
+    });
+    }
+
+    // Event listener for search input (input event)
+    searchInput.addEventListener('input', searchPatients);
+  
+    // Event listener for patient selection in the dropdown
+    patientDropdown.addEventListener('change', () => {
+        const selectedPatient = patientDropdown.value;
+        if (selectedPatient) {
+            // Display patient information for the selected patient
+            displayPatientInfo(selectedPatient);
+            // Show the "New Incident" button
+            document.getElementById('newIncidentButton').style.display = 'block';
+
+            // Modify the URL of the "New Incident" button to include the selected patient
+            const newIncidentButton = document.getElementById('newIncidentButton');
+            newIncidentButton.href = `new_incident.html?patient=${encodeURIComponent(selectedPatient)}`;
+
+            // Dynamically load and display incidents for the selected patient
+            loadIncidents(selectedPatient);
+        } else {
+            // Hide the "New Incident" button if no patient is selected
+            document.getElementById('newIncidentButton').style.display = 'none';
+            // Hide the incident list container
+            document.getElementById('incidentListContainer').style.display = 'none';
+            // Hide the general information display when no patient is selected
+            document.getElementById('generalInfoDisplay').style.display = 'none';
+            // Hide the visualization display when no patient is selected
+            document.getElementById('visualizationContainer').style.display = 'none';
+            document.getElementById('emptyContainer').style.display = 'none';
+        }
+    });
+
+    searchInput.addEventListener('keydown', (event) => {
+      if(event.key ==='Enter' || ((event.key >= 'A') && (event.key <= 'Z')) || ((event.key >= 'a') && (event.key <= 'z')) || ((event.key >= '0') && (event.key <= '9'))){
+        const selectedPatient = patientDropdown.value;
+        if (selectedPatient) {
+            // Display patient information for the selected patient
+            displayPatientInfo(selectedPatient);
+            // Show the "New Incident" button
+            document.getElementById('newIncidentButton').style.display = 'block';
+
+            // Modify the URL of the "New Incident" button to include the selected patient
+            const newIncidentButton = document.getElementById('newIncidentButton');
+            newIncidentButton.href = `new_incident.html?patient=${encodeURIComponent(selectedPatient)}`;
+
+            // Dynamically load and display incidents for the selected patient
+            loadIncidents(selectedPatient);
+        } else {
+            // Hide the "New Incident" button if no patient is selected
+            document.getElementById('newIncidentButton').style.display = 'none';
+            // Hide the incident list container
+            document.getElementById('incidentListContainer').style.display = 'none';
+            // Hide the general information display when no patient is selected
+            document.getElementById('generalInfoDisplay').style.display = 'none';
+            // Hide the visualization display when no patient is selected
+            document.getElementById('visualizationContainer').style.display = 'none';
+            document.getElementById('emptyContainer').style.display = 'none';
+        }}
+    });
+    // Function to load and display incidents for the selected patient
+    function loadIncidents(selectedPatient) {
+    // Assuming you have a directory structure for patient incidents
+    const patientIncidentPath = path.join(__dirname, 'patient_data', selectedPatient);
+
+    // Read the patient's incident directories
+    fs.readdir(patientIncidentPath, (err, incidentFolders) => {
+        if (err) {
+        console.error(err);
+        return;
+        }
+
+        const incidentCards = document.getElementById('incidentCards');
+        incidentCards.innerHTML = ''; // Clear previous incident frames
+
+        // Filter out the 'patient_info.xlsx' folder
+        incidentFolders = incidentFolders.filter((folderName) => folderName !== 'patient_info.xlsx');
+        incidentFolders = incidentFolders.filter((folderName) => folderName !== '~$patient_info.xlsx');
+        incidentFolders = incidentFolders.filter((folderName) => folderName !== 'patient_mal_data.xlsx');
+        incidentFolders = incidentFolders.filter((folderName) => folderName !== 'patient_ml_data.xlsx');
+
+        incidentFolders.forEach((incidentFolder) => {
+
+        // Create an incident card for each incident
+        const incidentCard = document.createElement('div');
+        incidentCard.classList.add('col-md-6', 'mb-4');
+        const incidentFolderPath = path.join(__dirname, 'patient_data', selectedPatient,incidentFolder);
+        //read date
+        const dateFilePath = path.join(incidentFolderPath, 'incidentDate.txt');
+        const incidentDate = fs.readFileSync(dateFilePath, 'utf8');
+        //read description
+        const descriptionFilePath = path.join(incidentFolderPath, 'incidentDescription.txt');
+        const incidentDescription = fs.readFileSync(descriptionFilePath, 'utf8');
+
+        const TreatmentFilePath = path.join(incidentFolderPath,'Treatment', 'treatment1.txt');
+        const incidentTreatment = fs.readFileSync(TreatmentFilePath, 'utf8');
+
+
+        // Create a card with title
+        incidentCard.innerHTML = `
+              <div class="card card-incident">
+                  <div class="card-header card-header-custom">
+                      ${incidentFolder} | ${incidentDate}
+                  </div>
+                  <div class="frame">
+                            <div class="frame-body frame-body-custom2">
+                                <p>${incidentDescription}</p>
+                            </div>
+                        </div>
+                  <div class="frame-body frame-body-custom">
+                      <div class="frame">
+                          <div class="frame-header frame-header-custom">
+                              Files and Reports
+                          </div>
+                          <div class="frame-body frame-body-custom">
+                              <ul id="filesList-${incidentFolder}">
+                                  <!-- Files will be dynamically inserted here by the JavaScript -->
+                              </ul>
+                              <input type="file" id="fileInput-${incidentFolder}" style="display: none;">
+                              <button onclick="document.getElementById('fileInput-${incidentFolder}').click()" class="btn-upload">Upload File</button>
+                          </div>
+                      </div>
+                      <div class="frame">
+                          <div class="frame-header frame-header-custom">
+                              Treatment and Medication
+                          </div>
+                          <div class="frame-body frame-body-treatment">
+                            <p>${incidentTreatment}</p>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          `;
+         // Append the incident card to the list of incident cards
+         incidentCards.appendChild(incidentCard);
+
+         const filesList = document.getElementById(`filesList-${incidentFolder}`);
+        // Retrieve the list of files in the "Files" directory
+        const filesFolderPath = path.join(__dirname, 'patient_data', selectedPatient, incidentFolder, 'Files');
+        fs.readdir(filesFolderPath, (err, files) => {
+            if (err) {
+                console.error(err);
+            } else {
+                if (files.length > 0) {
+                    files.forEach((file) => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = file;
+                        filesList.appendChild(listItem);
+                    });
+                } else {
+                    filesList.innerHTML += '<li>No files in the "Files" directory.</li>';
+                }
+            }
+        });
+
+        // Add a file input element for uploading files
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = `fileInput-${incidentFolder}`;
+        fileInput.style.display = 'none'; // Hide the file input
+        //filesAndReportsFrame.appendChild(fileInput);
+
+        // Add a button to trigger the file input
+        const uploadButton = document.createElement('button');
+        uploadButton.textContent = 'Upload File';
+        uploadButton.addEventListener('click', () => {
+        document.getElementById(`fileInput-${incidentFolder}`).click();
+        });
+        //filesAndReportsFrame.appendChild(uploadButton);
+
+        // Event listener for file input change
+        fileInput.addEventListener('change', (event) => {
+            const selectedFile = event.target.files[0];
+            
+            if (selectedFile) {
+                const incidentFolderPath = path.join(__dirname, 'patient_data', selectedPatient, incidentFolder); // Use incidentFolder directly
+                const filesFolderPath = path.join(incidentFolderPath, 'Files');
+                const newFilePath = path.join(filesFolderPath, selectedFile.name);
+
+                fs.copyFile(selectedFile.path, newFilePath, (err) => {
+                    if (err) {
+                        console.error(err);
+                        alert('Failed to upload the file. Please try again.');
+                    } else {
+                        alert('File uploaded successfully.');
+                        // You can update the UI to reflect the uploaded file, if needed
+                    }
+                });
+            }
+        });
+
+        // Show the incident list container
+       }); document.getElementById('incidentListContainer').style.display = 'block';
+       document.getElementById('visualizationContainer').style.display = 'block';
+       document.getElementById('emptyContainer').style.display = 'block';
+    });
+    }
+
+
+     // Add a click event listener to the "New Incident" button
+    newIncidentButton.addEventListener('click', () => {
+    // Show the incident form and hide the button
+    document.getElementById('incidentFormContainer').style.display = 'block';
+    newIncidentButton.style.display = 'none';
+    });
+
+
+    // Event listener for the incident form submission
+    const incidentForm = document.getElementById('incidentForm');
+    incidentForm.addEventListener('submit', (event) => {
+    event.preventDefault(); // Prevent the default form submission behavior
+
+    // Collect incident details
+    const incidentName = document.getElementById('incidentName').value;
+    const incidentDate = document.getElementById('incidentDate').value;
+    const incidentDescription = document.getElementById('incidentDescription').value;
+
+    // Create the directory structure for the incident
+    const selectedPatient = patientDropdown.value;
+    const incidentFolderPath = path.join(__dirname, 'patient_data', selectedPatient, incidentName);
+
+    try {
+        // Create directories for 'Files' and 'Treatment' within the incident folder
+        fs.mkdirSync(path.join(incidentFolderPath, 'Files'), { recursive: true });
+        fs.mkdirSync(path.join(incidentFolderPath, 'Treatment'), { recursive: true });
+
+        // Save incidentDate and incidentDescription in text files
+        fs.writeFileSync(path.join(incidentFolderPath, 'incidentDate.txt'), incidentDate);
+        fs.writeFileSync(path.join(incidentFolderPath, 'incidentDescription.txt'), incidentDescription);
+
+    } catch (err) {
+        console.error(err);
+    }
+
+    // Reset the form and hide it
+    incidentForm.reset();
+    document.getElementById('incidentFormContainer').style.display = 'none';
+    newIncidentButton.style.display = 'block';
+
+    });
+
+   // Function to display general information for a selected patient
+function displayPatientInfo(selectedPatient) {
+    const generalInfoDisplay = document.getElementById('generalInfoDisplay');
+    // Clear the previous patient information
+    const tableBody = generalInfoDisplay.querySelector('tbody');
+    tableBody.innerHTML = ''; // Clear the data
+
+    // Construct the path to the patient_info.xlsx file
+    const patientFolderPath = path.join(__dirname, 'patient_data', selectedPatient);
+    const patientInfoPath = path.join(patientFolderPath, 'patient_info.xlsx');
+
+    const workbook = new excel.Workbook();
+    const worksheetName = 'Patient Info';
+
+    try {
+        // Read the patient_info.xlsx file
+        workbook.xlsx.readFile(patientInfoPath).then(() => {
+            const worksheet = workbook.getWorksheet(worksheetName);
+
+            // Get the data from the first two rows
+            const headerRow = worksheet.getRow(1).values;
+            const dataRow = worksheet.getRow(2).values;
+
+            // Create the table rows based on header and data
+            headerRow.forEach((header, index) => {
+                const tableRow = document.createElement('tr');
+
+                // Create the header cell
+                const tableHeaderCell = document.createElement('th');
+                tableHeaderCell.textContent = header;
+                tableRow.appendChild(tableHeaderCell);
+
+                // Create the data cell for this column
+                const data = dataRow[index];
+                const tableDataCell = document.createElement('td');
+                tableDataCell.textContent = data;
+                tableRow.appendChild(tableDataCell);
+
+                // Append the row to the table body
+                tableBody.appendChild(tableRow);
+            });
+
+            // Show the general information display
+            generalInfoDisplay.style.display = 'block';
+        });
+    } catch (err) {
+        console.error(err);
+        // Display an error message if reading general information fails
+        generalInfoDisplay.innerHTML = 'Failed to read general information';
+    }
+}
+
+function toggleGr(timeToggle) {
+    const buttons = document.querySelectorAll('.toggle-button');
+    buttons.forEach(button => button.classList.remove('active'));
+
+    const images = document.querySelectorAll('.graph-image');
+    images.forEach(image => {
+      image.style.display = 'none';
+    });
+
+    switch (timeToggle) {
+      case '9months':
+        // Show images for 9 months
+        document.getElementById('graph1').style.display = 'block';
+        break;
+      case '2years':
+        // Show images for 2 years
+        document.getElementById('graph2').style.display = 'block';
+        break;
+      case 'alltime':
+      document.getElementById('graph2').style.display = 'block';
+        break;
+    }
+    const activeButton = document.querySelector(`.toggle-button[data-time="${timeToggle}"]`);
+    if (activeButton) {
+      activeButton.classList.add('active');
+    }
+  }
+
+  // Set default time frame
+  toggleGr('2years');
+
+
+  </script>
